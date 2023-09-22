@@ -4,6 +4,7 @@ const router = express.Router();
 const {body, validationResult} = require('express-validator');
 //import database
 const connection = require('../config/db');
+const { json } = require('body-parser');
 
 router.get('/', function(req, res){
     connection.query('select * from mahasiswa order by id_m desc', function(err, rows){
@@ -107,6 +108,34 @@ router.patch('/update/:id', [
     });
 });
 
+router.delete('/delete/:id', function(req, res){
+    let id = req.params.id;
+    if (!id) {
+        return res.status(400).json({
+            status: false,
+            message: 'Bad Request: ID parameter is missing',
+        });
+    }else{
+        connection.query('DELETE FROM mahasiswa WHERE id_m = ?', [id], function(err, result) {
+        if (err) {
+               return res.status(500).json({
+                   status: false,
+                   message: 'Server Error',
+               });
+           } else if (result.affectedRows === 0) {
+               return res.status(404).json({
+                   status: false,
+                   message: 'Data not found',
+               });
+           } else {
+               return res.status(200).json({
+                   status: true,
+                   message: 'Data has been deleted!',
+               });
+           }
+         })
+        }
+        });
 
 
 module.exports = router;
