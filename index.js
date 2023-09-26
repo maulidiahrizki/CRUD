@@ -13,8 +13,16 @@ const bodyPs = require('body-parser'); //import body parsernya
 app.use(bodyPs.urlencoded({extended: false}));
 app.use(bodyPs.json());
 
+const kartuKeluargaRouter = require('./routes/kartukeluarga');
+const ktpRouter = require('./routes/ktp');
+const detailKKRouter = require('./routes/detail_kk');
 const mhsRouter = require('./routes/mahasiswa');
+const jrsRouter = require('./routes/jurusan');
+app.use('/api/kartu-keluarga', kartuKeluargaRouter);
+app.use('/api/ktp', ktpRouter);
+app.use('/api/detail-kk', detailKKRouter);
 app.use('/api/mhs', mhsRouter);
+app.use('/api/jrs', jrsRouter);
 
 //KITA LISTEN eXPRESS.JS KEDALAM PORT YANG KITA BUAT DIATAS
 app.listen(port,() =>{

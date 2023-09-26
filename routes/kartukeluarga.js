@@ -7,7 +7,7 @@ const connection = require('../config/db');
 const { json } = require('body-parser');
 
 router.get('/', function(req, res){
-    connection.query('select * from mahasiswa order by id_m desc', function(err, rows){
+    connection.query('select * from kartu_keluarga order by no_kk desc', function(err, rows){
         if(err){
             return res.status(500).json({
                 status: false,
@@ -16,7 +16,7 @@ router.get('/', function(req, res){
         }else{
             return res.status(200).json({
                 status:true,
-                message: 'Data mahasiswa',
+                message: 'Data kartu_keluarga',
                 data: rows
             })
         }
@@ -25,9 +25,15 @@ router.get('/', function(req, res){
 
 router.post('/store',[
     //validation
-    body('nama').notEmpty(),
-    body('nrp').notEmpty(),
-    body('id_jurusan').notEmpty()
+    body('no_kk').notEmpty(),
+    body('alamat').notEmpty(),
+    body('rt').notEmpty(),
+    body('rw').notEmpty(),
+    body('kode_pos').notEmpty(),
+    body('desa_kelurahan').notEmpty(),
+    body('kecamatan').notEmpty(),
+    body('kabupaten_kota').notEmpty(),
+    body('provinsi').notEmpty()
 ],(req, res) => {
     const error = validationResult(req);
     if(!error.isEmpty()){
@@ -36,11 +42,17 @@ router.post('/store',[
         });
     }
 let Data = {
-    nama: req.body.nama,
-    nrp: req.body.nrp,
-    id_jurusan: req.body.id_jurusan
+    no_kk: req.body.no_kk,
+    alamat: req.body.alamat,
+    rt: req.body.rt,
+    rw: req.body.rw,
+    kode_pos: req.body.kode_pos,
+    desa_kelurahan: req.body.desa_kelurahan,
+    kecamatan: req.body.kecamatan,
+    kabupaten_kota: req.body.kabupaten_kota,
+    provinsi: req.body.provinsi
 }
-connection.query('insert into mahasiswa set ?', Data, function(err, rows){
+connection.query('insert into kartu_keluarga set ?', Data, function(err, rows){
     if(err){
         return res.status(500).json({
             status: false,
@@ -57,18 +69,23 @@ connection.query('insert into mahasiswa set ?', Data, function(err, rows){
 })
 
 router.get('/:id', function (req, res) {
-    connection.query('select a.nama, b.nama_jurusan as jurusan ' + 
-    'from mahasiswa a join jurusan b ' +
-    'on b.id_j=a.id_jurusan order by a.id_m desc', function (err, rows) {
+    let id = req.params.id;
+    connection.query(`select * from kartu_keluarga where no_kk = ${id}`, function (err, rows) {
         if (err) {
             return res.status(500).json({
                 status: false,
-                message: 'Server Failed'
+                message: 'Server Error'
             });
-        }else {
+        }
+        if (rows.length <= 0) {
+            return res.status(404).json({
+                status: false,
+                message: 'Not Found',
+            });
+        } else {
             return res.status(200).json({
                 status: true,
-                message: 'Data Mahasiswa',
+                message: 'Data kartu_keluarga',
                 data: rows[0]
             });
         }
@@ -76,9 +93,15 @@ router.get('/:id', function (req, res) {
 });
 
 router.patch('/update/:id', [
-    body('nama').notEmpty(),
-    body('nrp').notEmpty(),
-    body('id_jurusan').notEmpty()
+    body('no_kk').notEmpty(),
+    body('alamat').notEmpty(),
+    body('rt').notEmpty(),
+    body('rw').notEmpty(),
+    body('kode_pos').notEmpty(),
+    body('desa_kelurahan').notEmpty(),
+    body('kecamatan').notEmpty(),
+    body('kabupaten_kota').notEmpty(),
+    body('provinsi').notEmpty()
 ], (req, res) => {
     const error = validationResult(req);
     if (!error.isEmpty()) {
@@ -88,11 +111,17 @@ router.patch('/update/:id', [
     }
     let id = req.params.id;
     let Data = {
-        nama: req.body.nama,
-        nrp: req.body.nrp,
-        id_jurusan: req.body.id_jurusan
+        no_kk: req.body.no_kk,
+        alamat: req.body.alamat,
+        rt: req.body.rt,
+        rw: req.body.rw,
+        kode_pos: req.body.kode_pos,
+        desa_kelurahan: req.body.desa_kelurahan,
+        kecamatan: req.body.kecamatan,
+        kabupaten_kota: req.body.kabupaten_kota,
+        provinsi: req.body.provinsi
     };
-    connection.query(`UPDATE mahasiswa SET ? WHERE id_m = ${id}`, Data, function (err, rows) {
+    connection.query(`UPDATE kartu_keluarga SET ? WHERE no_kk = ${id}`, Data, function (err, rows) {
         if (err) {
             return res.status(500).json({
                 status: false,
@@ -115,7 +144,7 @@ router.delete('/delete/:id', function(req, res){
             message: 'Bad Request: ID parameter is missing',
         });
     }else{
-        connection.query('DELETE FROM mahasiswa WHERE id_m = ?', [id], function(err, result) {
+        connection.query('DELETE FROM kartu_keluarga WHERE no_kk = ?', [id], function(err, result) {
         if (err) {
                return res.status(500).json({
                    status: false,
