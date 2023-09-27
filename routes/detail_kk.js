@@ -6,26 +6,19 @@ const {body, validationResult} = require('express-validator');
 const connection = require('../config/db');
 const { json } = require('body-parser');
 
-router.get('/', function(req, res){
-    connection.query('select * from detail_kk order by id_detail desc', function(err, rows){
-        if(err){
-            return res.status(500).json({
-                status: false,
-                message: 'Server Failed',
-            })
-        }else{
-            return res.status(200).json({
-                status:true,
-                message: 'Data detail_kk',
-                data: rows
-            })
+router.get('/', (req, res) => {
+    connection.query('SELECT detail_kk.id_detail, detail_kk.no_kk, ktp_nama.nama_lengkap AS nama, detail_kk.status_hubungan_dalam_keluarga, ktp_ayah.nama_lengkap AS ayah, ktp_ibu.nama_lengkap AS ibu FROM detail_kk LEFT JOIN ktp AS ktp_nama ON detail_kk.nik = ktp_nama.nik LEFT JOIN ktp AS ktp_ayah ON detail_kk.ayah = ktp_ayah.nik LEFT JOIN ktp AS ktp_ibu ON detail_kk.ibu = ktp_ibu.nik', (err, rows) => {
+        if (err) {
+            console.error('Error retrieving detail_kk data:', err);
+            return res.status(500).json({ status: false, message: 'Server Error' });
         }
-    })
-})
+        console.log('detail_kk data retrieved successfully');
+        return res.status(200).json({ status: true, message: 'Data detail_kk', data: rows });
+    });
+});
 
 router.post('/store',[
     //validation
-    body('id_detail').notEmpty(),
     body('no_kk').notEmpty(),
     body('nik').notEmpty(),
     body('status_hubungan_dalam_keluarga').notEmpty(),
@@ -39,7 +32,6 @@ router.post('/store',[
         });
     }
 let Data = {
-    id_detail: req.body.id_detail,
     no_kk: req.body.no_kk,
     nik: req.body.nik,
     status_hubungan_dalam_keluarga: req.body.status_hubungan_dalam_keluarga,
@@ -62,46 +54,35 @@ connection.query('insert into detail_kk set ?', Data, function(err, rows){
 })
 })
 
-router.get('/:nama', function (req, res) {
-    const nama = req.params.nama;
-
-    // Jalankan kueri SQL untuk menggabungkan data dari tiga tabel
-    const query = `
-        SELECT ktp.nik, ktp.nama_lengkap, ktp.tempat_lahir, ktp.tanggal_lahir,
-               ktp.agama, ktp.pendidikan, ktp.jenis_pekerjaan, ktp.golongan_darah, ktp.kewarganegaraan,
-               kartu_keluarga.alamat, kartu_keluarga.rt, kartu_keluarga.rw, kartu_keluarga.kode_pos,
-               kartu_keluarga.desa_kelurahan, kartu_keluarga.kecamatan, kartu_keluarga.kabupaten_kota, kartu_keluarga.provinsi,
-               detail_kk.status_hubungan_dalam_keluarga, detail_kk.ayah, detail_kk.ibu
-        FROM ktp
-        LEFT JOIN detail_kk ON ktp.nik = detail_kk.nik
-        LEFT JOIN kartu_keluarga ON detail_kk.no_kk = kartu_keluarga.no_kk
-        WHERE ktp.nama_lengkap = ?`;
-
-    connection.query(query, [nama], function (err, rows) {
-        if (err) {
-            return res.status(500).json({
-                status: false,
-                message: 'Server Error'
-            });
+router.get('/:id', function (req, res) {
+    connection.query('SELECT detail_kk.id_detail, detail_kk.no_kk, ktp_nama.nama_lengkap AS nama, detail_kk.status_hubungan_dalam_keluarga, ktp_ayah.nama_lengkap AS ayah, ktp_ibu.nama_lengkap AS ibu FROM detail_kk LEFT JOIN ktp AS ktp_nama ON detail_kk.nik = ktp_nama.nik LEFT JOIN ktp AS ktp_ayah ON detail_kk.ayah = ktp_ayah.nik LEFT JOIN ktp AS ktp_ibu ON detail_kk.ibu = ktp_ibu.nik', (err, rows) => {
+            if (err) {
+                return res.status(500).json({
+                    status: false,
+                    message: 'Server Error'
+                });
+            }
+            if (rows.length <= 0) {
+                return res.status(404).json({
+                    status: false,
+                    message: 'Data Not Found'
+                });
+            } else {
+                const result = {
+                    status: true,
+                    message: 'Detail no_kk',
+                    data: rows[0]
+                };
+                return res.status(200).json(result);
+            }
         }
-        if (rows.length <= 0) {
-            return res.status(404).json({
-                status: false,
-                message: 'Data Not Found'
-            });
-        } else {
-            return res.status(200).json({
-                status: true,
-                message: 'Data KTP, Kartu Keluarga, dan Detail KK',
-                data: rows[0]
-            });
-        }
-    });
-});
+    )
+    })
+
+
 
 
 router.patch('/update/:id', [
-    body('id_detail').notEmpty(),
     body('no_kk').notEmpty(),
     body('nik').notEmpty(),
     body('status_hubungan_dalam_keluarga').notEmpty(),
@@ -116,7 +97,6 @@ router.patch('/update/:id', [
     }
     let id = req.params.id;
     let Data = {
-        id_detail: req.body.id_detail,
         no_kk: req.body.no_kk,
         nik: req.body.nik,
         status_hubungan_dalam_keluarga: req.body.status_hubungan_dalam_keluarga,
