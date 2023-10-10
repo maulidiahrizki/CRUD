@@ -4,6 +4,7 @@ const router = express.Router();
 const {body, validationResult} = require('express-validator');
 //import database
 const connection = require('../config/db');
+const fs = require('fs')
 const { json } = require('body-parser');
 const multer = require('multer');
 const path = require('path');
@@ -90,7 +91,7 @@ router.get('/:id', function (req, res) {
     });
 });
 
-router.patch('/update/:id', [
+router.patch('/update/:id', upload.single("gambar"), [
     body('nama').notEmpty(),
     body('nrp').notEmpty(),
     body('id_jurusan').notEmpty()
@@ -102,25 +103,51 @@ router.patch('/update/:id', [
         });
     }
     let id = req.params.id;
-    let Data = {
-        nama: req.body.nama,
-        nrp: req.body.nrp,
-        id_jurusan: req.body.id_jurusan
-    };
-    connection.query(`UPDATE mahasiswa SET ? WHERE id_m = ${id}`, Data, function (err, rows) {
-        if (err) {
+    // Lakukan pengecekan apakah ada file yang diunggah
+    let gambar = req.file ? req.file.filename : null;
+
+    connection.query(`select * from mahasiswa where id_m = ${id}`, function(err, rows) {
+        if(err){
             return res.status(500).json({
                 status: false,
                 message: 'Server Error',
-            });
-        } else {
-            return res.status(200).json({
-                status: true,
-                message: 'Update succes..!'
-            });
+            })
         }
-    });
-});
+        if(rows.length ===0){
+            return res.status(404).json({
+                status: false,
+                message: 'Not Found',
+            })
+        }
+        const namaFileLama = rows[0].gambar;
+
+        // hapus file lama jika ada
+        if (namaFileLama && gambar) {
+            const pathFileLama = path.join(__dirname, '../public/images', namaFileLama);
+            fs.unlinkSync(pathFileLama)
+        }
+        
+            let Data = {
+                nama: req.body.nama,
+                nrp: req.body.nrp,
+                id_jurusan: req.body.id_jurusan
+            };
+            connection.query(`UPDATE mahasiswa SET ? WHERE id_m = ${id}`, Data, function (err, rows) {
+                if (err) {
+                    return res.status(500).json({
+                        status: false,
+                        message: 'Server Error',
+                    });
+                } else {
+                    return res.status(200).json({
+                        status: true,
+                        message: 'Update succes..!'
+                    })
+                }
+            })
+        })
+    })
+
 
 router.delete('/delete/:id', function(req, res){
     let id = req.params.id;
