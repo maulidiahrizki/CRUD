@@ -5,6 +5,20 @@ const {body, validationResult} = require('express-validator');
 //import database
 const connection = require('../config/db');
 const { json } = require('body-parser');
+const multer = require('multer');
+const path = require('path');
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'public/images')
+    },
+    filename: (req, file, cb) => {
+        console.log(file)
+        cb(null, Date.now() + path.extname(file.originalname))
+    }
+})
+const upload= multer({storage: storage})
+
 
 router.get('/', function(req, res){
     connection.query('select * from mahasiswa order by id_m desc', function(err, rows){
@@ -23,7 +37,7 @@ router.get('/', function(req, res){
     })
 })
 
-router.post('/store',[
+router.post('/store', upload.single("gambar"),[
     //validation
     body('nama').notEmpty(),
     body('nrp').notEmpty(),
@@ -38,7 +52,8 @@ router.post('/store',[
 let Data = {
     nama: req.body.nama,
     nrp: req.body.nrp,
-    id_jurusan: req.body.id_jurusan
+    id_jurusan: req.body.id_jurusan,
+    gambar: req.file.filename
 }
 connection.query('insert into mahasiswa set ?', Data, function(err, rows){
     if(err){
