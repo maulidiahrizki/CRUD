@@ -1,6 +1,8 @@
 const express = require('express')
 const app = express()
 const port = 3000
+const cors = require('cors')
+app.use(cors())
 
 //membuat route baru dengan method GET yang isinya kalimat halo dek
 // app.get('/', (req,res) => {
