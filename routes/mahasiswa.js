@@ -18,7 +18,17 @@ const storage = multer.diskStorage({
         cb(null, Date.now() + path.extname(file.originalname))
     }
 })
-const upload= multer({storage: storage})
+const fileFilter = (req, file, cb) => {
+    //Mengecek jenis file yang diizinkan
+    if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
+        cb(null, true); // ijinkan file
+    }else {
+        cb(new Error('Jenis file tidak diizinkan'), false);
+    }
+};
+const upload= multer({storage: storage, fileFilter: fileFilter})
+
+
 
 
 router.get('/', function(req, res){
@@ -38,7 +48,7 @@ router.get('/', function(req, res){
     })
 })
 
-router.post('/store', upload.single("gambar"),[
+router.post('/store', upload.fields([{ name: 'gambar', maxCount: 1 }, { name: 'swa_foto', maxCount: 1 }]),[
     //validation
     body('nama').notEmpty(),
     body('nrp').notEmpty(),
@@ -54,7 +64,9 @@ let Data = {
     nama: req.body.nama,
     nrp: req.body.nrp,
     id_jurusan: req.body.id_jurusan,
-    gambar: req.file.filename
+    gambar: req.files.gambar[0].filename,
+    swa_foto: req.files.swa_foto[0].filename
+
 }
 connection.query('insert into mahasiswa set ?', Data, function(err, rows){
     if(err){
@@ -151,32 +163,35 @@ router.patch('/update/:id', upload.single("gambar"), [
 
 router.delete('/delete/:id', function(req, res){
     let id = req.params.id;
-    if (!id) {
-        return res.status(400).json({
+
+connection.query(`select * from mahasiswa where id_m = ${id}`, function (err, rows) {
+    if(err){
+        return res.status(500).json({
+            status: false,
+            message: 'Server Error',
+        })
+    }
+    if(rows.length ===0){
+        return res.status(404).json({
             status: false,
             message: 'Bad Request: ID parameter is missing',
         });
     }else{
         connection.query('DELETE FROM mahasiswa WHERE id_m = ?', [id], function(err, result) {
         if (err) {
-               return res.status(500).json({
-                   status: false,
-                   message: 'Server Error',
-               });
-           } else if (result.affectedRows === 0) {
-               return res.status(404).json({
-                   status: false,
-                   message: 'Data not found',
-               });
-           } else {
-               return res.status(200).json({
-                   status: true,
-                   message: 'Data has been deleted!',
-               });
-           }
-         })
+            return res.status(500).json({
+                status: false,
+                message: 'Server Error',
+            })
+        }else{
+            return res.status(200).json({
+                status: true,
+                message: 'Data has been delete !',
+            })
         }
-        });
-
+    })
+}
+})
+});
 
 module.exports = router;
