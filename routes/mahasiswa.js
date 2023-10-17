@@ -138,12 +138,12 @@ router.patch('/update/:id', upload.fields([{ name: 'gambar', maxCount: 1 }, { na
 
         // hapus file lama jika ada
         if (gambarLama && gambar) {
-            const pathGambar = path.join(__dirname, '../public/images', gambarLama);
-            fs.unlinkSync(pathGambar)
+            const pathFileLama = path.join(__dirname, '../public/images', gambarLama);
+            fs.unlinkSync(pathFileLama)
         }
         if (swa_fotoLama && swa_foto) {
-            const pathSwaFoto = path.join(__dirname, '../public/images', swa_fotoLama);
-            fs.unlinkSync(pathSwaFoto)
+            const pathFileLama = path.join(__dirname, '../public/images', swa_fotoLama);
+            fs.unlinkSync(pathFileLama)
         }
         
             let Data = {
