@@ -11,6 +11,8 @@ app.use(cors())
 
 //import route posts
 
+const path = require('path')
+app.use('/static', express.static(path.join(__dirname, 'public/images')))
 const bodyPs = require('body-parser'); //import body parsernya
 app.use(bodyPs.urlencoded({extended: false}));
 app.use(bodyPs.json());
@@ -20,11 +22,18 @@ const ktpRouter = require('./routes/ktp');
 const detailKKRouter = require('./routes/detail_kk');
 const mhsRouter = require('./routes/mahasiswa');
 const jrsRouter = require('./routes/jurusan');
+
+//import rute register dan login
+const auth = require('./routes/auth/auth.js');
+app.use('/api/auth', auth);
+
 app.use('/api/kartu-keluarga', kartuKeluargaRouter);
 app.use('/api/ktp', ktpRouter);
 app.use('/api/detail-kk', detailKKRouter);
 app.use('/api/mhs', mhsRouter);
 app.use('/api/jrs', jrsRouter);
+
+
 
 //KITA LISTEN eXPRESS.JS KEDALAM PORT YANG KITA BUAT DIATAS
 app.listen(port,() =>{
